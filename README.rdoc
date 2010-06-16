@@ -4,7 +4,9 @@
 
 == DESCRIPTION:
 
-FIX (describe your package)
+What do you usually do when you need to bookmark a URL? You use your browser. Right? What if you wanna do it from a different computer or another browser on the same computer? You end up synchronizing across computers. Do you really wanna do it from an external server? If not, flin is the perfect solution for you.
+
+flin gives you the possibility to bookmark a URL locally on your computer irrespective of which browser you are using. Later, you can sync with other computers in your local network by committing changes to a central database. The central database is a Tokyo Cabinet data store. The local URL file is a YAML file.
 
 == FEATURES/PROBLEMS:
 
