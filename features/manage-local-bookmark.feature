@@ -1,10 +1,10 @@
-Feature: Manage local bookmark
+Feature: Manage local bookmarks
 
 	As a user
-	I want to manage local bookmark
+	I want to store local bookmarks
 	So that I can  visit the urls later in the future
 	
-	Scenario: add new bookmark entry
+	Scenario: User adds a new bookmark entry
 		Given I enter bookmark_desc
 		And I enter url
 		Then
