@@ -1,1 +1,1 @@
-default: --format profile features
+default: --format pretty features
