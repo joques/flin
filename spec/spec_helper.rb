@@ -1,3 +1,5 @@
+require File.expand_path(File.join(File.dirname(__FILE__), %w[.. lib flin bookmark bookmark]))
+
 begin
   require 'spec'
 rescue LoadError
@@ -6,5 +8,5 @@ rescue LoadError
   #require 'spec'
 end
 
-$:.unshift(File.dirname(__FILE__) + '/../lib')
-require 'flin'
+# $:.unshift(File.dirname(__FILE__) + '/../lib/flin')
+# require 'flin'

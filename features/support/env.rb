@@ -1,9 +1,10 @@
-require File.dirname(__FILE__) + "/../../lib/flin"
+require File.expand_path(File.join(File.dirname(__FILE__), %w[.. .. lib flin bookmark bookmark]))
 
 gem 'cucumber'
 require 'cucumber'
 gem 'rspec'
 #require 'spec'
+
 
 Before do
   @tmp_root = File.dirname(__FILE__) + "/../../tmp"
