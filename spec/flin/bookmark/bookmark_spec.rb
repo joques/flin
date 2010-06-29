@@ -1,15 +1,13 @@
-# spec/flin/bookmark/bookmark_spec.rb
-
 require File.join(File.dirname(__FILE__), %w[.. .. spec_helper])
 
 # require File.dirname(__FILE__) + '/../../spec_helper.rb'
 
-#include Flin
+include Flin
 
 describe Bookmarks do
   
  before(:each) do
-   # @bmks = Bookmarks.new
+    @bmks = Bookmarks.new
  end
       
 end
