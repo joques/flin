@@ -12,12 +12,26 @@ module Flin
     end
     
     # this method checks if there exists an entry with a given title in the bookmarks      
-    def exists_entry_with_title(title)
+    def exists_entry_with_title?(title)
       raise ArgumentError unless title.kind_of? String
       valid_title = clean_title(title)
       entries.has_key?(valid_title)
     end
     
+    #this method checks if a given url has been paired with a title in the bookmarks
+    def is_url_paired_with_title?(title, url)
+      raise ArgumentError unless title.kind_of? String
+      raise ArgumentError unless url.kind_of? String
+      
+      raise(RuntimeError, "Sorry! the old URL is malformed") unless validate_url?(url)
+      
+      if exists_entry_with_title?(title)
+        entry_val = entries[clean_title(title)]
+        entry_val.include?(url)  
+      else
+        false
+      end
+    end    
     
     # this method adds a new entry to the bookmarks. Adding a new entry can happen in tow possible.
     # A fresh entry can be added to the bookmarks. A url can also be appended to an existing entry
@@ -30,7 +44,7 @@ module Flin
       valid_title = clean_title(title)
       
       # should check that url is valid
-      raise(RuntimeError, "Sorry! the URL is malformed.") unless validate_url(url)
+      raise(RuntimeError, "Sorry! the URL is malformed.") unless validate_url?(url)
       
       valid_url = url
       
@@ -71,17 +85,59 @@ module Flin
       valid_title = clean_title(title)
       
       #should validate both old and new urls
-      raise(RuntimeError, "Sorry! the old URL is malformed") unless validate_url(old_url)
-      raise(RuntimeError, "Sorry! the new URL is malformed") unless validate_url(new_url)
+      raise(RuntimeError, "Sorry! the old URL is malformed") unless validate_url?(old_url)
+      raise(RuntimeError, "Sorry! the new URL is malformed") unless validate_url?(new_url)
       
       if entries.has_key?(valid_title)
         current_url_val = entries[valid_title]
-        current_url_val.gsub(old_url, new_url)
-        entries[valid_title] = current_url_val
-        "Bookmark entry successfully updated!"
+        if current_url_val.include?(old_url)  
+          current_url_val.gsub(old_url, new_url)
+          entries[valid_title] = current_url_val
+          "Bookmark entry successfully updated!"
+        else
+          "Sorry! The old url has never been attached to the title"
+        end                  
       else
         "Sorry! There is no bookmark entry with this title"
       end    
+    end
+    
+    def delete(title, url)
+      raise ArgumentError unless title.kind_of? String
+      raise ArgumentError unless url.kind_of? String
+      
+      valid_title = clean_title(title)
+      
+      raise(RuntimeError, "Sorry! the url is malformed")  unless validate_url?(url)
+      
+      if entries.has_key?(valid_title)
+        current_url_val = entries[valid_title]
+        if current_url_val.include?(url)
+          current_url_val.gsub(url,'')
+          if current_url_val.empty?
+            entries[valid_title] = nil
+          else
+            entries[valid_title] = current_url_val
+          end
+          "Bookmark entry successfully deleted!"
+        else
+          "Sorry! The url has never been attached to the title"
+        end
+      else
+        "Sorry! There is no bookmark entry with this title"
+      end
+    end
+    
+    def get(title)
+      raise ArgumentError unless title.kind_of? String
+      
+      valid_title = clean_title(title)
+      
+      if entries.has_key?(valid_title)
+        entries[valid_title]
+      else
+        "Sorry! There is no bookmark entry with this title"
+      end
     end
     
   private
@@ -97,7 +153,7 @@ module Flin
     
     #this method uses a regular expression to validate a url. Here we accept
     #http, https, ftp, file and git
-    def validate_url(url)
+    def validate_url?(url)
       url_regex = Regexp.new('(https|http|file|ftp|git)://[a-z0-9]+([-.]{1}[a-z0-9]+)*.[a-z]{2,5}(([0-9]{1,5})?/.*)?')
       url =~ url_regex
     end

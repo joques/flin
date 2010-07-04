@@ -20,7 +20,45 @@ Feature: Manage local bookmarks
 		Then I should see a message Bookmark entry successfully extended!
 		
 	Scenario: User successfully updates an entry
-		Given the entry title rake tutorial exists
-		And the title rake tutorial is associated with the url http://svarovsky-thomas.com/rake.html
-		When I update entry title rake tutorial with new url http://svarovsky-tomas.com/rake.html where url is http://svarovsky-thomas.com/rake.html
+		Given the entry title help haiti exists
+		And the title help haiti is associated with the url http://helphaiti.org
+		When I update entry title help haiti with new url http://shinninghaiti.org where url is http://helphaiti.org
 		Then I should see a message Bookmark entry successfully updated!
+		
+	Scenario: User unsuccessfully updates an entry with wrong title
+		Given the entry title another rake tutorial does not exist
+		When I update entry title another rake tutorial with new url http://anotherraketutorial.com where url is http://raketutorial.info
+		Then I should see a message Sorry! There is no bookmark entry with this title
+		
+	Scenario: User unsuccessfully updates an entry with wrong url
+		Given the entry title help haiti exists
+		And the title help haiti is not associated with the url http://abrighthaiti.org
+		When I update entry title help haiti with new url http://shinninghaiti.org where url is http://abrighthaiti.org
+		Then I should see a message Sorry! The old url has never been attached to the title
+		
+	Scenario: User successfully deletes an entry
+		Given the entry title agile data exists
+		And the title agile data is associated with the url http://www.agiledata.org/
+		When I delete entry title agile data where url is http://www.agiledata.org
+		Then I should see a message Bookmark entry successfully deleted!
+
+	Scenario: User unsuccessfully deletes an entry with wrong title
+		Given the entry title agiledata does not exist
+		When I delete entry title agiledata where url is http://www.agiledata.org
+		Then I should see a message Sorry! There is no bookmark entry with this title
+
+	Scenario: User unsuccessfully deletes an entry with wrong url
+		Given the entry title agile data exists
+		And the title agile data is not associated with the url http://towardsagile.com
+		When I delete entry title agile data where url is http://towardsagile.com
+		Then I should see a message Sorry! The url has never been attached to the title
+		
+	Scenario: User successfully views an entry
+		Given the entry title agile data exists
+		When I get entry with title agile data
+		Then I should see the url http://www.agiledata.org/
+		
+	Scenario: User unsuccessfully views an entry
+		Given the entry title agiledata does not exist
+		When I get entry with title agiledata
+		Then I should see a message Sorry! There is no bookmark entry with this title
