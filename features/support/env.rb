@@ -1,9 +1,11 @@
-require File.expand_path(File.join(File.dirname(__FILE__), %w[.. .. lib flin bookmark bookmark]))
-
+begin require 'rspec/expectations'; rescue LoadError; require 'spec/expectations'; end
 gem 'cucumber'
 require 'cucumber'
 gem 'rspec'
-#require 'spec'
+#require 'rspec'
+
+$:.unshift(File.dirname(__FILE__) + '/../../lib/flin/bookmark')
+require 'bookmark'
 
 
 Before do
@@ -13,4 +15,7 @@ Before do
   FileUtils.rm_rf   @tmp_root
   FileUtils.mkdir_p @home_path
   ENV['HOME'] = @home_path
+  @bookmark = Flin::Bookmark.new
 end
+
+

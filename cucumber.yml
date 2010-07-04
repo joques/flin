@@ -1,1 +1,1 @@
-default: --format pretty features
+autotest: --format pretty features
