@@ -1,4 +1,5 @@
 require 'yaml'
+require 'uri'
 
 module Flin
   class Bookmark
@@ -154,8 +155,8 @@ module Flin
     #this method uses a regular expression to validate a url. Here we accept
     #http, https, ftp, file and git
     def validate_url?(url)
-      url_regex = Regexp.new('(https|http|file|ftp|git)://[a-z0-9]+([-.]{1}[a-z0-9]+)*.[a-z]{2,5}(([0-9]{1,5})?/.*)?')
-      url =~ url_regex
+      url_regex = Regexp.new('(^$)|(^(http|https|file|ftp|git):\/\/[a-z0-9]+([\-\.]{1}[a-z0-9]+)*\.[a-z]{2,5}(([0-9]{1,5})?\/.*)?$)')
+      url =~ url_regex              
     end
         
   end
