@@ -8,8 +8,8 @@ module Flin
     def initialize
       path = %w[.. .. .. data urlsink.yml]
       bmk_file = File.join(File.dirname(__FILE__), path)
-      yaml = IO.read(bmk_file)
-      @entries = YAML.load(yaml)
+      yaml_str = IO.read(bmk_file)
+      @entries = YAML.load(yaml_str)
     end
     
     # this method checks if there exists an entry with a given title in the bookmarks      
