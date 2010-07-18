@@ -7,9 +7,7 @@ module Flin
     
     def initialize
       path = %w[.. .. .. data urlsink.yml]
-      bmk_file = File.join(File.dirname(__FILE__), path)
-      yaml_str = IO.read(bmk_file)
-      @entries = YAML.load(yaml_str)
+      @entries = load_entries(path)
     end
     
     # this method checks if there exists an entry with a given title in the bookmarks      
@@ -141,6 +139,12 @@ module Flin
       end
     end
     
+    def save
+      data_path = %w[.. .. .. data urlsink.yml]
+      save_entries(data_path)
+      "Bookmark entries successfully stored locally!"
+    end
+        
   private
     
     #this method strips off white space and special characters from the title
@@ -157,6 +161,21 @@ module Flin
     def validate_url?(url)
       url_regex = Regexp.new('(^$)|(^(http|https|file|ftp|git):\/\/[a-z0-9]+([\-\.]{1}[a-z0-9]+)*\.[a-z]{2,5}(([0-9]{1,5})?\/.*)?$)')
       url =~ url_regex              
+    end
+    
+    def load_entries(path)
+      bmk_file = File.join(File.dirname(__FILE__), path)
+      yaml_str = IO.read(bmk_file)
+      YAML.load(yaml_str)  
+    end
+    
+    def save_entries(file_name)
+      yaml_entries = @entries.to_yaml
+      valid_file_name = File.join(File.dirname(__FILE__), file_name)
+      
+      File.open(valid_file_name, "w") do |f|
+        f.write(yaml_entries)
+      end
     end
         
   end
