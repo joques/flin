@@ -7,4 +7,8 @@ Feature: Save and sync bookmarks
 	Scenario: User successfully saves local bookmarks
 		Given the bookmark entries are not empty
 		When I save to local store
-		Then I should see a message Bookmark entries successfully stored locally!
+		Then I should see a message Bookmark entries successfully stored locally!	
+	# Scenario: User successfully syncs local bookmarks with database
+	# 	Given the bookmark entries are not empty
+	# 	When I sync with database
+	# 	Then I should see a message Local bookmarks successfully synced with database!

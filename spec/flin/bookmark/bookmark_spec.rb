@@ -62,6 +62,12 @@ describe Bookmark do
    specify {@bmks.get("yaml tutorial").should eql("http://www.yaml.de/en/")}
  end
  
+ context "save local bookmarks" do
+   specify {@bmks.should respond_to(:save)}
+   
+   specify {@bmks.save.should eql("Bookmark entries successfully stored locally!")}
+ end
+ 
  context "Argument Error detection" do
    specify {lambda {@bmks.exists_entry_with_title?("Che Guevara")}.should_not raise_error(ArgumentError)}
    specify {lambda {@bmks.exists_entry_with_title?}.should raise_error(ArgumentError)}
