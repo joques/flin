@@ -10,7 +10,6 @@ When /^I save to local store$/ do
   @response = @bookmark.save
 end
 
-# Then /^I should see a message (.*)$/ do |message|
-#   # @response.should eql(message)
-#   pending
-# end
+When /^I sync with database$/ do
+  @response = @bookmark.sync_db
+end

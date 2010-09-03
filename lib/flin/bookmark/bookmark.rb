@@ -1,5 +1,6 @@
 require 'yaml'
 require 'uri'
+require 'rufus/tokyo/tyrant'
 
 module Flin
   class Bookmark
@@ -14,7 +15,7 @@ module Flin
     def exists_entry_with_title?(title)
       raise ArgumentError unless title.kind_of? String
       valid_title = clean_title(title)
-      entries.has_key?(valid_title)
+      @entries.has_key?(valid_title)
     end
     
     #this method checks if a given url has been paired with a title in the bookmarks
@@ -51,7 +52,7 @@ module Flin
       added = case option
       when :extend
         # should concatenate the string in this case
-        old_url = entries[valid_title]
+        old_url = @entries[valid_title]
         
         if old_url == nil
           old_url = ''
@@ -63,13 +64,13 @@ module Flin
         
         new_url << valid_url
         
-        entries[valid_title] = new_url
+        @entries[valid_title] = new_url
         "Bookmark entry successfully extended!"
       when :new
-        if entries.has_key?(valid_title)
+        if @entries.has_key?(valid_title)
           "Sorry! A bookmark entry with this title already exists!"
         else
-          entries[valid_title] = valid_url
+          @entries[valid_title] = valid_url
           "New bookmark entry successfully added!"
         end
       end      
@@ -87,11 +88,11 @@ module Flin
       raise(RuntimeError, "Sorry! the old URL is malformed") unless validate_url?(old_url)
       raise(RuntimeError, "Sorry! the new URL is malformed") unless validate_url?(new_url)
       
-      if entries.has_key?(valid_title)
-        current_url_val = entries[valid_title]
+      if @entries.has_key?(valid_title)
+        current_url_val = @entries[valid_title]
         if current_url_val.include?(old_url)  
           current_url_val.gsub(old_url, new_url)
-          entries[valid_title] = current_url_val
+          @entries[valid_title] = current_url_val
           "Bookmark entry successfully updated!"
         else
           "Sorry! The old url has never been attached to the title"
@@ -109,14 +110,14 @@ module Flin
       
       raise(RuntimeError, "Sorry! the url is malformed")  unless validate_url?(url)
       
-      if entries.has_key?(valid_title)
-        current_url_val = entries[valid_title]
+      if @entries.has_key?(valid_title)
+        current_url_val = @entries[valid_title]
         if current_url_val.include?(url)
           current_url_val.gsub(url,'')
           if current_url_val.empty?
-            entries[valid_title] = nil
+            @entries[valid_title] = nil
           else
-            entries[valid_title] = current_url_val
+            @entries[valid_title] = current_url_val
           end
           "Bookmark entry successfully deleted!"
         else
@@ -132,8 +133,8 @@ module Flin
       
       valid_title = clean_title(title)
       
-      if entries.has_key?(valid_title)
-        entries[valid_title]
+      if @entries.has_key?(valid_title)
+        @entries[valid_title]
       else
         "Sorry! There is no bookmark entry with this title"
       end
@@ -143,6 +144,14 @@ module Flin
       data_path = %w[.. .. .. data urlsink.yml]
       save_entries(data_path)
       "Bookmark entries successfully stored locally!"
+    end
+    
+    def sync_db
+      DB_HOST = '10.0.1.2'
+      DB_PORT = 11211.
+      data_path = %w[.. .. .. data urlsink.yml]
+      sync_with_central_db(DB_HOST, DB_PORT, data_path)
+      "Local bookmarks successfully synced with database!"
     end
         
   private
@@ -176,6 +185,44 @@ module Flin
       File.open(valid_file_name, "w") do |f|
         f.write(yaml_entries)
       end
+    end
+    
+    def sync_with_central_db(db_host, db_port, file_name)      
+      central_urls = Rufus :: Tokyo :: Tyrant.new(db_host, db_port)
+      synced_entries = {}
+            
+      #do the synchronization here
+      
+      #first, copy all the entries from the central db to the new hash
+      central_urls.each do |bmk_key, bmk_vals|
+        synced_entries[bmk_key] = bmk_vals
+      end
+      
+      # then extend the new hash with entries from the local ones
+      @entries.each do |local_key, local_vals|
+        if synced_entries.has_key?(local_key)
+          old_val = synced_entries[local_key]
+          if old_val == nil
+            old_val = ''
+          else
+            old_val << ', '
+          end
+          old_val << local_vals
+          synced_entries[local_key] = old_val
+        else
+          synced_entries[local_key] = local_vals
+        end        
+      end
+      
+      # Finally, copy thenew hash back to the db
+      synced_entries.each do |new_key, new_val|
+        central_urls[new_key] = new_val
+      end
+            
+      central_urls.close
+      
+      @entries = synced_entries
+      save_entries(file_name)      
     end
         
   end

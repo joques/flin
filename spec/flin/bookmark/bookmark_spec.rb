@@ -68,6 +68,12 @@ describe Bookmark do
    specify {@bmks.save.should eql("Bookmark entries successfully stored locally!")}
  end
  
+ context "sync to central batabase" do
+   specify {@bmks.should respond_to(:sync_db)}
+   
+   specify {@bmks.sync_db.should eql("Local bookmarks successfully synced with database!")}
+ end
+ 
  context "Argument Error detection" do
    specify {lambda {@bmks.exists_entry_with_title?("Che Guevara")}.should_not raise_error(ArgumentError)}
    specify {lambda {@bmks.exists_entry_with_title?}.should raise_error(ArgumentError)}
