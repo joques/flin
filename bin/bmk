@@ -3,8 +3,145 @@
 #  Created on 2010-6-16.
 #  Copyright (c) 2010. All rights reserved.
 
-require 'rubygems'
 require File.expand_path(File.dirname(__FILE__) + "/../lib/flin")
+
+require 'rubygems'
+require 'commander/import'
 require "bmk/cli"
 
-Bmk::CLI.execute(STDOUT, ARGV)
+# Bmk::CLI.execute(STDOUT, ARGV)
+
+program :name, 'Flin'
+program :version, '0.0.1'
+program :description, 'Stores and fetches urls and their associated titles from a local store. It also syncs with a
+central Tokyo Cabinet key value store'
+
+command :exists do |com_ex|
+  com_ex.syntax = 'flin exists <title>'
+  com_ex.summary = 'Check if title is the key to an entry in the local url store'
+  com_ex.description = 'Check if there exists an entry in the local url store where the key is title'
+  com_ex.example 'check an entry for ruby tutorial', 'flin exists "ruby tutorial"'
+  com_ex.when_called do |args_ex|
+    title = args_ex.shift or raise 'Entry title required for command exists'
+    bmk_inst = Flin::SingletonBookmark.instance
+    bmk_inst.exists_entry_with_title? title
+  end
+end
+
+
+command :paired do |com_pair|
+  com_pair.syntax = 'flin paired <title> <url>'
+  com_pair.summary = 'check if there exists an entry where title as its key and the value contains url'
+  com_pair.description = 'Look for an entry in the local url store whose key is title and having url as part of its value'
+  com_pair.example 'check if nosql rails is paired with http://nosql.mypopescu.com/tagged/rails', 'flin paired "nosql rails" "http://nosql.mypopescu.com/tagged/rails"'
+  com_pair.when_called do |args_pair|
+    if args_pair.length < 2
+      raise 'The command paired requires two arguments: the entry title and the url'
+    else
+      title = args_pair.shift or raise 'entry title required'
+      url = args_pair.shift or raise 'url required'
+      bmk_inst = Flin::SingletonBookmark.instance
+      bmk_inst.is_url_paired_with_title? title, url
+    end    
+  end
+end
+
+command :add do |com_add|
+  com_add.syntax = 'flin add [options] <title> <url>'
+  com_add.summary = 'Add a new entry to the local url store'
+  com_add.descriptopm = 'Create a new entry with key title and value url. If an entry with such a title exists, extend the value with url if the :new option is not used'
+  com_add.option '-n', '--new', 'only add if an entry with such title does not exist'
+  com_add.example 'Add a new entry title1 url1', 'flin add title1 url1'
+  com_add.example 'Add a new entry title2 url2 with :new option', 'flin add -n title2 url2'
+  com_add.when_called do |args_add, options_add|
+    if args_add.length < 2
+      raise 'The command add requires two arguments: the entry title and the url' 
+    else
+      title = args_add.shift or raise 'entry title required'
+      url = args_add.shift or raise 'url required'
+      bmk_inst = Flin::SingletonBookmark.instance
+      if options_add.new
+        bmk_inst.add title, url, :new
+      else
+        bmk_inst.add title, url
+      end
+      bmk_inst.save
+    end
+  end
+end
+
+command :update do |com_up|
+  com_up.syntax = 'flin update <title> <old_url> <new_url>'
+  com_up.summary = 'Update old_url with new_url in an entry where the key is title'
+  com_up.description = 'Look for an entry in the local url store with title as the key. Then replace any occurrence of the value old_url with the value new_url'
+  com_up.example 'Update url1 with url2 for title', 'flin update title url1 url2'
+  com_up.when_called do |args_up|
+    if args_up < 3
+      raise 'The command update requires three arguments: the entry title, the old url and the new one'
+    else
+      title = args_up.shift or raise 'entry title required'
+      old_url = args_up.shift or raise 'old url required'
+      new_url = args_up.shift or raise 'new url required'
+      bmk_inst = Flin::SingletonBookmark.instance
+      bmk_inst.update title, old_url, new_url
+      bmk_inst.save
+    end
+  end
+end
+
+command :delete do |com_del|
+  com_del.syntax = 'flin delete <title> <url>'
+  com_del.summary = 'delete the value url in an entry corresponding to title'
+  com_del.description = 'Look for an entry in the local url store with title as the key. Remove all occurrences of url from the value. If the resulting value is emtpy, delete the entry'
+  com_del.example 'Delete url1 for title1', 'flin delete title1 url1'
+  com_del.when_called do |args_del|
+    if args_del.length < 2
+      raise 'The command delete requires two arguments: the entry title, the url'
+    else
+      title = args_del.shift or raise 'entry title required'
+      url = args_del.shift or raise 'url required'
+      bmk_inst = Flin::SingletonBookmark.instance
+      bmk_inst.delete title, url
+      bmk_inst.save
+    end
+  end
+end
+
+command :get do |com_get|
+  com_get.syntax = 'flin get <title>'
+  com_get.summary = 'return the value associated with the title'
+  com_get.description = 'Look for an entry corresponding to title and return the value'
+  com_get.example 'Get the value for title1', 'flin get title1'
+  com_get.when_called do |args_get|
+    title = args_get.shift or raise 'Entry title required for command get'
+    bmk_inst = Flin::SingletonBookmark.instance
+    bmk_inst.get title    
+  end
+end
+
+command :save do |com_sv|
+  com_sv.syntax = 'flin save'
+  com_sv.summary = 'save the current entries to the local url store'
+  com_sv.description = 'Save all the entries, including the latest changes, to the local url store'
+  com_sv.when_called do
+    bmk_inst = Flin::SingletonBookmark.instance
+    bmk_inst.save    
+  end
+end
+
+command :sync do |com_sync|
+  com_sync.syntax = 'flin sync <host> <port>'
+  com_sync.summary = 'synchronize the url store with a central db'
+  com_sync.description = 'Synchronize the content of the local url store with the central database'
+  com_sync.when_called do |args_sync|
+    if args_sync.length < 2
+      raise 'The command sync_db requires two arguments: the db host and the port number'
+    else
+      host = args_sync.shift or raise 'Db host required'
+      port = args_sync.shift or raise 'Db port required'
+      
+      bmk_inst = Flin::SingletonBookmark.instance
+      bmk_inst.sync_db host, port
+    end
+  end
+end

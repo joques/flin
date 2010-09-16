@@ -5,20 +5,24 @@ require 'rufus/tokyo/tyrant'
 module Flin
   class Bookmark
     attr_reader :entries
+    attr_reader :entry_path
     
-    def initialize
-      path = %w[.. .. .. data urlsink.yml]
-      @entries = load_entries(path)
+    # a yml file is expected as the local data path. Here we assume 
+    def initialize(local_data_path)
+      @entry_path = local_data_path
+      @entries = load_entries(@entry_path)
     end
     
-    # this method checks if there exists an entry with a given title in the bookmarks      
+    # this method checks if there exists an entry with a given title in the
+    # bookmarks      
     def exists_entry_with_title?(title)
       raise ArgumentError unless title.kind_of? String
       valid_title = clean_title(title)
       @entries.has_key?(valid_title)
     end
     
-    #this method checks if a given url has been paired with a title in the bookmarks
+    #this method checks if a given url has been paired with a title in the
+    #bookmarks
     def is_url_paired_with_title?(title, url)
       raise ArgumentError unless title.kind_of? String
       raise ArgumentError unless url.kind_of? String
@@ -31,10 +35,11 @@ module Flin
       else
         false
       end
-    end    
+    end
     
-    # this method adds a new entry to the bookmarks. Adding a new entry can happen in tow possible.
-    # A fresh entry can be added to the bookmarks. A url can also be appended to an existing entry
+    # this method adds a new entry to the bookmarks. Adding a new entry can
+    # happen in two possible. A fresh entry can be added to the bookmarks. A
+    # url can also be appended to an existing entry
     def add(title, url, option = :extend)
       raise ArgumentError unless title.kind_of? String
       raise ArgumentError unless url.kind_of? String
@@ -42,6 +47,7 @@ module Flin
       
       # should strip off all white space and special characters from title
       valid_title = clean_title(title)
+      valid_title.freeze
       
       # should check that url is valid
       raise(RuntimeError, "Sorry! the URL is malformed.") unless validate_url?(url)
@@ -53,18 +59,17 @@ module Flin
       when :extend
         # should concatenate the string in this case
         old_url = @entries[valid_title]
-        
-        if old_url == nil
-          old_url = ''
+                
+        if old_url.nil?
+          @entries[valid_title] = valid_url
         else
-          old_url << ', '
+          unless old_url.include?(valid_url)
+            old_url << ', '
+            old_url << valid_url
+            @entries[valid_title] = old_url
+          end
         end
         
-        new_url = old_url
-        
-        new_url << valid_url
-        
-        @entries[valid_title] = new_url
         "Bookmark entry successfully extended!"
       when :new
         if @entries.has_key?(valid_title)
@@ -76,6 +81,8 @@ module Flin
       end      
     end
     
+    # this method looks for an entry corresponding to the title and replaces
+    # the old url with the new one
     def update(title, old_url, new_url)
       raise ArgumentError unless title.kind_of? String
       raise ArgumentError unless old_url.kind_of? String
@@ -102,6 +109,8 @@ module Flin
       end    
     end
     
+    # this method looks for an entry corresponding to the title and removes
+    # the url it exists
     def delete(title, url)
       raise ArgumentError unless title.kind_of? String
       raise ArgumentError unless url.kind_of? String
@@ -113,9 +122,18 @@ module Flin
       if @entries.has_key?(valid_title)
         current_url_val = @entries[valid_title]
         if current_url_val.include?(url)
-          current_url_val.gsub(url,'')
+          # should be areful about the comma added after each url
+          url_followed_by_comma = url
+          url_followed_by_comma << ', '
+          
+          if current_url_val.include?(url_followed_by_comma)
+            current_url_val.gsub(url_followed_by_comma,'')
+          else
+            current_url_val.gsub(url,'')
+          end          
+          
           if current_url_val.empty?
-            @entries[valid_title] = nil
+            @entries.delete(valid_title)
           else
             @entries[valid_title] = current_url_val
           end
@@ -128,6 +146,7 @@ module Flin
       end
     end
     
+    # this method returns all the urls associated with the title
     def get(title)
       raise ArgumentError unless title.kind_of? String
       
@@ -140,29 +159,32 @@ module Flin
       end
     end
     
+    
+    # this method saves the bookmark entries to a local file
     def save
-      data_path = %w[.. .. .. data urlsink.yml]
-      save_entries(data_path)
+      save_entries(@entry_path)
       "Bookmark entries successfully stored locally!"
     end
     
-    def sync_db
-      DB_HOST = '10.0.1.2'
-      DB_PORT = 11211.
-      data_path = %w[.. .. .. data urlsink.yml]
-      sync_with_central_db(DB_HOST, DB_PORT, data_path)
+    
+    # this method synchronizes the local bookmark entries with the central
+    # database
+    def sync_db(db_host, db_port)
+      sync_with_central_db(db_host, db_port, @entry_path)
       "Local bookmarks successfully synced with database!"
+    end
+    
+    # automatic string conversion method for the class
+    def to_s
+      @entries
     end
         
   private
     
     #this method strips off white space and special characters from the title
     def clean_title(title)
-      valid_title = title
-      # valid_title = title.chop!
-      # valid_title = valid_title.chomp!
-      valid_title = valid_title.downcase
-      valid_title
+      title.chomp
+      title.downcase
     end
     
     #this method uses a regular expression to validate a url. Here we accept
@@ -187,31 +209,35 @@ module Flin
       end
     end
     
-    def sync_with_central_db(db_host, db_port, file_name)      
+    def sync_with_central_db(db_host, db_port, file_name)
+      #Maybe I should try and catch some exception here    
       central_urls = Rufus :: Tokyo :: Tyrant.new(db_host, db_port)
       synced_entries = {}
             
-      #do the synchronization here
+      #do the synchronization as follows
       
-      #first, copy all the entries from the central db to the new hash
-      central_urls.each do |bmk_key, bmk_vals|
-        synced_entries[bmk_key] = bmk_vals
-      end
-      
-      # then extend the new hash with entries from the local ones
+      # fisrt create a copy of the retrieved hash
+      synced_entries = central_urls.clone
+            
+      # then extend the new hash with entries from the local file. Also, we
+      # remove all the duplicates
       @entries.each do |local_key, local_vals|
         if synced_entries.has_key?(local_key)
           old_val = synced_entries[local_key]
-          if old_val == nil
-            old_val = ''
+          if old_val.nil?
+            synced_entries[local_key] = local_vals
           else
-            old_val << ', '
-          end
-          old_val << local_vals
-          synced_entries[local_key] = old_val
-        else
-          synced_entries[local_key] = local_vals
-        end        
+            local_vals_array = local_vals.split(/,\s*/)
+            local_vals_wo_dup = ''
+            for loc_val in local_vals_array
+              unless old_val.include?(loc_val)
+                local_vals_wo_dup << ', '
+                local_vals_wo_dup << loc_val
+              end
+            end
+            old_val << local_vals_wo_dup
+            synced_entries[local_key] = local_vals_wo_dup
+          end          
       end
       
       # Finally, copy thenew hash back to the db

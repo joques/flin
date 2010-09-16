@@ -11,5 +11,5 @@ Feature: Save and sync bookmarks
 		
 	Scenario: User successfully syncs local bookmarks with database
 		Given the bookmark entries are not empty
-		When I sync with database
+		When I sync with database with port 11211 and host 10.0.1.2
 		Then I should see a message Local bookmarks successfully synced with database!

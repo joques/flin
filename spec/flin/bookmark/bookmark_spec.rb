@@ -7,7 +7,8 @@ include Flin
 describe Bookmark do
   
  before(:each) do
-    @bmks = Bookmark.new
+   path = %w{.. .. .. data urlsink.yml}
+    @bmks = Bookmark.new(path)
  end
  
  subject {@bmks}
@@ -71,7 +72,7 @@ describe Bookmark do
  context "sync to central batabase" do
    specify {@bmks.should respond_to(:sync_db)}
    
-   specify {@bmks.sync_db.should eql("Local bookmarks successfully synced with database!")}
+   specify {@bmks.sync_db("10.0.1.2", 11211).should eql("Local bookmarks successfully synced with database!")}
  end
  
  context "Argument Error detection" do

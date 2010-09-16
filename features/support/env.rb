@@ -15,7 +15,8 @@ Before do
   FileUtils.rm_rf   @tmp_root
   FileUtils.mkdir_p @home_path
   ENV['HOME'] = @home_path
-  @bookmark = Flin::Bookmark.new
+  path = %w{.. .. .. data urlsink.yml}
+  @bookmark = Flin::Bookmark.new(path)
 end
 
 
