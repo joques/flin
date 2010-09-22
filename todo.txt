@@ -1,0 +1,4 @@
+---
+Introduce nesting in the yml file and manage it in the Bookmark library
+
+Need to handle update and delete differently. This requires to keep track of all operations that occur.

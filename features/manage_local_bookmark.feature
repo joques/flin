@@ -16,7 +16,7 @@ Feature: Manage local bookmarks
 	
 	Scenario: User successfully extends a bookmark entry
 		Given the bookmark entries
-		When I add new entry with title Haiti and url http://helphaiti.org
+		When I add new entry with title help haiti and url http://helphaiti.net
 		Then I should see a message Bookmark entry successfully extended!
 		
 	Scenario: User successfully updates an entry

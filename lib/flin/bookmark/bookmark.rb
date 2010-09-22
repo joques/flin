@@ -9,7 +9,12 @@ module Flin
     
     # a yml file is expected as the local data path. Here we assume 
     def initialize(local_data_path)
-      @entry_path = local_data_path
+      if local_data_path.nil?
+        @entry_path = %w{.. .. .. data urls.yml}
+      else
+        raise(RuntimeError, "Sorry! url file does not exist") unless check_file?(local_data_path)
+        @entry_path = local_data_path
+      end
       @entries = load_entries(@entry_path)
     end
     
@@ -122,7 +127,7 @@ module Flin
       if @entries.has_key?(valid_title)
         current_url_val = @entries[valid_title]
         if current_url_val.include?(url)
-          # should be areful about the comma added after each url
+          # should be careful about the comma added after each url
           url_followed_by_comma = url
           url_followed_by_comma << ', '
           
@@ -143,7 +148,7 @@ module Flin
         end
       else
         "Sorry! There is no bookmark entry with this title"
-      end
+      end      
     end
     
     # this method returns all the urls associated with the title
@@ -170,13 +175,22 @@ module Flin
     # this method synchronizes the local bookmark entries with the central
     # database
     def sync_db(db_host, db_port)
+      # The current version of the sync does not account for updates and
+      # deletes. Need to keep track of the operation in order to do so
+      
       sync_with_central_db(db_host, db_port, @entry_path)
       "Local bookmarks successfully synced with database!"
     end
     
     # automatic string conversion method for the class
     def to_s
-      @entries
+      # should beautify the entry display
+
+      pretty_bmk = @entries.inject do |final_str, (entry_key, entry_vals)|
+        final_str << entry_key << ':' << '\t' << entry_vals << '\n'
+        final_str
+      end
+      pretty_bmk
     end
         
   private
@@ -194,61 +208,76 @@ module Flin
       url =~ url_regex              
     end
     
+    def get_file(path)
+      file = File.join(File.dirname(__FILE__), path)
+    end
+    
+    def check_file?(path)
+      file_name = get_file(path)
+      File.exists?(file_name)
+    end
+    
     def load_entries(path)
-      bmk_file = File.join(File.dirname(__FILE__), path)
+      bmk_file = get_file(path)
       yaml_str = IO.read(bmk_file)
       YAML.load(yaml_str)  
     end
     
-    def save_entries(file_name)
+    def save_entries(path)
       yaml_entries = @entries.to_yaml
-      valid_file_name = File.join(File.dirname(__FILE__), file_name)
+      valid_file_name = get_file(path)
       
       File.open(valid_file_name, "w") do |f|
         f.write(yaml_entries)
       end
     end
     
-    def sync_with_central_db(db_host, db_port, file_name)
-      #Maybe I should try and catch some exception here    
-      central_urls = Rufus :: Tokyo :: Tyrant.new(db_host, db_port)
-      synced_entries = {}
-            
-      #do the synchronization as follows
-      
-      # fisrt create a copy of the retrieved hash
-      synced_entries = central_urls.clone
-            
-      # then extend the new hash with entries from the local file. Also, we
-      # remove all the duplicates
-      @entries.each do |local_key, local_vals|
-        if synced_entries.has_key?(local_key)
-          old_val = synced_entries[local_key]
-          if old_val.nil?
-            synced_entries[local_key] = local_vals
-          else
-            local_vals_array = local_vals.split(/,\s*/)
-            local_vals_wo_dup = ''
-            for loc_val in local_vals_array
-              unless old_val.include?(loc_val)
-                local_vals_wo_dup << ', '
-                local_vals_wo_dup << loc_val
-              end
-            end
-            old_val << local_vals_wo_dup
-            synced_entries[local_key] = local_vals_wo_dup
-          end          
-      end
-      
-      # Finally, copy thenew hash back to the db
-      synced_entries.each do |new_key, new_val|
-        central_urls[new_key] = new_val
-      end
-            
-      central_urls.close
-      
+    def sync_with_central_db(db_host, db_port, path)       
+       # We use this hash to merge to the local and central data stores
+       synced_entries = Hash.new
+        
+       begin
+         #Maybe I should try and catch some exception here
+         central_urls = Rufus::Tokyo::Tyrant.new(db_host, Integer(db_port))         
+       rescue Rufus::TokyoError
+         # handle error
+         puts "Cannot access the tyrant server at host #{db_host} and port #{db_port}"
+         raise(RuntimeError, "Tokyo Tyrant server not available")
+       else
+         # First, we copy the content of the db
+         central_urls.each do |central_key, central_vals|
+           synced_entries[central_key] = central_vals
+         end         
+         
+         # Next, we merge with entries from the local file. Also, we remove all
+         # the duplicates
+         @entries.each do |local_key, local_vals|
+           synced_vals = synced_entries[local_key]
+           if synced_vals.nil?
+             synced_entries[local_key] = local_vals
+           else
+             local_val_array = local_vals.split(/,\s*/)
+             for loc_val in local_val_array
+               unless synced_vals.include?(loc_val)
+                 synced_vals << ', ' 
+                 synced_vals << loc_val
+               end
+             end
+             synced_entries[local_key] = synced_vals
+           end
+         end
+         # Finally, copy the new hash back to the db
+         synced_entries.each do |new_key, new_val|
+           central_urls[new_key] = new_val
+         end                   
+       ensure
+         # close the data store
+          central_urls.close unless central_urls.nil?
+       end
+
+      #update the entries and save the file locally
       @entries = synced_entries
-      save_entries(file_name)      
+      save_entries(path)      
     end
         
   end

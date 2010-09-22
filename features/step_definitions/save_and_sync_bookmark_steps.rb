@@ -6,10 +6,6 @@ Given /^the bookmark entries are not empty$/ do
   @bookmark.entries.should_not be_empty
 end
 
-When /^I add new entry with title (.*) and url (.*)$/ do |title, url| 
-  @response = @bookmark.add(title, url)
-end
-
 When /^I save to local store$/ do
   @response = @bookmark.save
 end

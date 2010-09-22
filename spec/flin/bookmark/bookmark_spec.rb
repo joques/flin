@@ -14,8 +14,8 @@ describe Bookmark do
  subject {@bmks}
  
  context "instantiation without any arguments" do
-   specify {lambda {Bookmark.new}.should_not raise_error}
-   specify {lambda {Bookmark.new("moo")}.should raise_error(ArgumentError)}
+   specify {lambda {Bookmark.new}.should raise_error}
+   specify {lambda {Bookmark.new("moo")}.should_not raise_error(ArgumentError)}
  end
  
  context "all entries in one accessor" do
@@ -69,12 +69,12 @@ describe Bookmark do
    specify {@bmks.save.should eql("Bookmark entries successfully stored locally!")}
  end
  
- context "sync to central batabase" do
-   specify {@bmks.should respond_to(:sync_db)}
-   
-   specify {@bmks.sync_db("10.0.1.2", 11211).should eql("Local bookmarks successfully synced with database!")}
- end
- 
+  context "sync to central batabase" do
+    specify {@bmks.should respond_to(:sync_db)}
+    
+    specify {@bmks.sync_db('10.0.1.2', 11211).should eql("Local bookmarks successfully synced with database!")}
+  end
+  
  context "Argument Error detection" do
    specify {lambda {@bmks.exists_entry_with_title?("Che Guevara")}.should_not raise_error(ArgumentError)}
    specify {lambda {@bmks.exists_entry_with_title?}.should raise_error(ArgumentError)}
