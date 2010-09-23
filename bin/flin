@@ -28,9 +28,9 @@ command :exists do |com_ex|
     bmk_inst = Flin::SingletonBookmark.instance
     exists_result = bmk_inst.exists_entry_with_title? title
     if exists_result
-      puts "Yes! #{title} is an entry key" 
+      say "Yes! #{title} is an entry key" 
     else
-      puts "Sorry! there is no entry with key #{title}"
+      say "Sorry! there is no entry with key #{title}"
     end
   end
 end
@@ -50,9 +50,9 @@ command :paired do |com_pair|
       bmk_inst = Flin::SingletonBookmark.instance
       paired_result = bmk_inst.is_url_paired_with_title? title, url
       if paired_result
-        puts "Yes! the entry (#{title}, ..., #{url}, ...) exists"
+        say "Yes! the entry (#{title}, ..., #{url}, ...) exists"
       else
-        puts "Sorry! entry (#{title}, ..., #{url}, ...) does not exist"
+        say "Sorry! entry (#{title}, ..., #{url}, ...) does not exist"
       end
     end    
   end
@@ -79,7 +79,7 @@ command :add do |com_add|
         add_result = bmk_inst.add title, url
       end
       bmk_inst.save
-      puts add_result
+      say add_result
     end
   end
 end
@@ -99,7 +99,7 @@ command :update do |com_up|
       bmk_inst = Flin::SingletonBookmark.instance
       update_result = bmk_inst.update title, old_url, new_url
       bmk_inst.save
-      puts update_result
+      say update_result
     end
   end
 end
@@ -118,7 +118,7 @@ command :delete do |com_del|
       bmk_inst = Flin::SingletonBookmark.instance
       del_result = bmk_inst.delete title, url
       bmk_inst.save
-      puts del_result
+      say del_result
     end
   end
 end
@@ -133,9 +133,9 @@ command :get do |com_get|
     bmk_inst = Flin::SingletonBookmark.instance
     get_result = bmk_inst.get title
     if get_result.match(/^Sorry!/)
-      puts get_result
+      say get_result
     else
-      puts "the following urlshave been attached to #{title}:\t #{get_result}"
+      say "the following urlshave been attached to #{title}:\t #{get_result}"
     end
   end
 end
@@ -147,7 +147,7 @@ command :save do |com_sv|
   com_sv.when_called do
     bmk_inst = Flin::SingletonBookmark.instance
     save_result = bmk_inst.save    
-    puts save_result
+    say save_result
   end
 end
 
@@ -164,7 +164,7 @@ command :sync do |com_sync|
       
       bmk_inst = Flin::SingletonBookmark.instance
       sync_result = bmk_inst.sync_db host, port
-      puts sync_result
+      say sync_result
     end
   end
 end
