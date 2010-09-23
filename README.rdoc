@@ -1,6 +1,6 @@
 = flin
 
-* http://github.com/#{github_username}/#{project_name}
+* http://github.com/joque/flin
 
 == DESCRIPTION:
 
