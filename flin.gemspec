@@ -13,17 +13,15 @@ Gem::Specification.new do |s|
   s.summary = %q{Bookmark urls and share them across the network}
   s.description = %q{Bookmark urls locally and sync them with a central Tokyo Cabinet key-value store}
   
-  s.signing_key = 'path/to/the/private_key.pem'
-  s.cert_chain = ['gem-public_cert.pem']
-  
   s.required_rubygems_version = ">= 1.3.6"
 
   s.add_development_dependency "cucumber"
   s.add_development_dependency "rspec"
+  s.add_dependency(%q<commander>, [">= 4.0.1"])
+  s.add_dependency(%q<rufus-tokyo>)
 
   s.files              = `git ls-files`.split("\n")
-  s.test_files         = `git ls-files -- {test,spec,features}/*`.split("\n")
-  s.executables        = `git ls-files -- bin/*`.split("\n").map{ |f| File.basename(f) }
-  s.default_executable = "bmk"
+  s.test_files         = `git ls-files -- {spec,features}/*`.split("\n")
+  s.executables        = ["flin"]    
   s.require_paths      = ["lib"]
 end

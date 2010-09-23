@@ -3,18 +3,20 @@
 #  Created on 2010-6-16.
 #  Copyright (c) 2010. All rights reserved.
 
-require File.expand_path(File.dirname(__FILE__) + "/../lib/flin")
+
+FLIN_ROOT = File.expand_path File.join(File.dirname(__FILE__), '..')
+$:.unshift FLIN_ROOT
 
 require 'rubygems'
 require 'commander/import'
-require "bmk/cli"
+require 'lib/flin'
+require 'lib/flin/bookmark/bookmark'
+require 'lib/flin/bookmark/singleton_bookmark'
 
-# Bmk::CLI.execute(STDOUT, ARGV)
 
 program :name, 'Flin'
-program :version, '0.0.1'
-program :description, 'Stores and fetches urls and their associated titles from a local store. It also syncs with a
-central Tokyo Cabinet key value store'
+program :version, '0.0.5'
+program :description, 'Stores and fetches urls and their associated titles from a local store. It also syncs with a central Tokyo Cabinet key value store'
 
 command :exists do |com_ex|
   com_ex.syntax = 'flin exists <title>'
@@ -24,7 +26,12 @@ command :exists do |com_ex|
   com_ex.when_called do |args_ex|
     title = args_ex.shift or raise 'Entry title required for command exists'
     bmk_inst = Flin::SingletonBookmark.instance
-    bmk_inst.exists_entry_with_title? title
+    exists_result = bmk_inst.exists_entry_with_title? title
+    if exists_result
+      puts "Yes! #{title} is an entry key" 
+    else
+      puts "Sorry! there is no entry with key #{title}"
+    end
   end
 end
 
@@ -41,7 +48,12 @@ command :paired do |com_pair|
       title = args_pair.shift or raise 'entry title required'
       url = args_pair.shift or raise 'url required'
       bmk_inst = Flin::SingletonBookmark.instance
-      bmk_inst.is_url_paired_with_title? title, url
+      paired_result = bmk_inst.is_url_paired_with_title? title, url
+      if paired_result
+        puts "Yes! the entry (#{title}, ..., #{url}, ...) exists"
+      else
+        puts "Sorry! entry (#{title}, ..., #{url}, ...) does not exist"
+      end
     end    
   end
 end
@@ -49,7 +61,7 @@ end
 command :add do |com_add|
   com_add.syntax = 'flin add [options] <title> <url>'
   com_add.summary = 'Add a new entry to the local url store'
-  com_add.descriptopm = 'Create a new entry with key title and value url. If an entry with such a title exists, extend the value with url if the :new option is not used'
+  com_add.description = 'Create a new entry with key title and value url. If an entry with such a title exists, extend the value with url if the :new option is not used'
   com_add.option '-n', '--new', 'only add if an entry with such title does not exist'
   com_add.example 'Add a new entry title1 url1', 'flin add title1 url1'
   com_add.example 'Add a new entry title2 url2 with :new option', 'flin add -n title2 url2'
@@ -60,12 +72,14 @@ command :add do |com_add|
       title = args_add.shift or raise 'entry title required'
       url = args_add.shift or raise 'url required'
       bmk_inst = Flin::SingletonBookmark.instance
+      add_result = ''
       if options_add.new
-        bmk_inst.add title, url, :new
+        add_result = bmk_inst.add title, url, :new
       else
-        bmk_inst.add title, url
+        add_result = bmk_inst.add title, url
       end
       bmk_inst.save
+      puts add_result
     end
   end
 end
@@ -76,15 +90,16 @@ command :update do |com_up|
   com_up.description = 'Look for an entry in the local url store with title as the key. Then replace any occurrence of the value old_url with the value new_url'
   com_up.example 'Update url1 with url2 for title', 'flin update title url1 url2'
   com_up.when_called do |args_up|
-    if args_up < 3
+    if args_up.length < 3
       raise 'The command update requires three arguments: the entry title, the old url and the new one'
     else
       title = args_up.shift or raise 'entry title required'
       old_url = args_up.shift or raise 'old url required'
       new_url = args_up.shift or raise 'new url required'
       bmk_inst = Flin::SingletonBookmark.instance
-      bmk_inst.update title, old_url, new_url
+      update_result = bmk_inst.update title, old_url, new_url
       bmk_inst.save
+      puts update_result
     end
   end
 end
@@ -101,8 +116,9 @@ command :delete do |com_del|
       title = args_del.shift or raise 'entry title required'
       url = args_del.shift or raise 'url required'
       bmk_inst = Flin::SingletonBookmark.instance
-      bmk_inst.delete title, url
+      del_result = bmk_inst.delete title, url
       bmk_inst.save
+      puts del_result
     end
   end
 end
@@ -115,7 +131,12 @@ command :get do |com_get|
   com_get.when_called do |args_get|
     title = args_get.shift or raise 'Entry title required for command get'
     bmk_inst = Flin::SingletonBookmark.instance
-    bmk_inst.get title    
+    get_result = bmk_inst.get title
+    if get_result.match(/^Sorry!/)
+      puts get_result
+    else
+      puts "the following urlshave been attached to #{title}:\t #{get_result}"
+    end
   end
 end
 
@@ -125,7 +146,8 @@ command :save do |com_sv|
   com_sv.description = 'Save all the entries, including the latest changes, to the local url store'
   com_sv.when_called do
     bmk_inst = Flin::SingletonBookmark.instance
-    bmk_inst.save    
+    save_result = bmk_inst.save    
+    puts save_result
   end
 end
 
@@ -141,7 +163,8 @@ command :sync do |com_sync|
       port = args_sync.shift or raise 'Db port required'
       
       bmk_inst = Flin::SingletonBookmark.instance
-      bmk_inst.sync_db host, port
+      sync_result = bmk_inst.sync_db host, port
+      puts sync_result
     end
   end
 end

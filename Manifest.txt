@@ -12,7 +12,6 @@ features/step_definitions/save_and_sync_bookmark_steps.rb
 features/support/common.rb
 features/support/env.rb
 features/support/matchers.rb
-lib/bmk/cli.rb
 lib/flin.rb
 lib/flin/bookmark/bookmark.rb
 lib/flin/bookmark/singleton_bookmark.rb

@@ -4,25 +4,45 @@
 
 == DESCRIPTION:
 
-What do you usually do when you need to bookmark a URL? You use your browser. Right? What if you wanna do it from a different computer or another browser on the same computer? You end up synchronizing across computers. Do you really wanna do it from an external server? If not, flin is the perfect solution for you.
+What do you usually do when you need to bookmark a URL? You use your browser. Right? What if you wanna do it from a different computer or
+another browser on the same computer? You end up synchronizing across computers. Do you really wanna do it from an external server? If not,
+flin is the perfect solution for you.
 
-flin gives you the possibility to bookmark a URL locally on your computer irrespective of which browser you are using. Later, you can sync with other computers in your local network by committing changes to a central database. The central database is a Tokyo Cabinet data store. The local URL file is a YAML file.
+flin gives you the possibility to bookmark a URL locally on your computer irrespective of which browser you are using. Later, you can sync
+with other computers in your local network by committing changes to a central database. The central database is a Tokyo Cabinet data store,
+while the local URL file is a YAML file.
 
 == FEATURES/PROBLEMS:
 
-* FIX (list of features or problems)
+The synchronization with the central db needs some more thoughts. As it is now, it might seem inconsistent to a certain extent. Between two
+syncs, entries which were deleted or updated might appear again. This then requires to keep track of the entire operations as well as their
+timestamps. More information needs to be kept in the KVS.
 
 == SYNOPSIS:
 
-  FIX (code sample of usage)
+  There are two possible ways to use flin. First, we provide a bunch of commands. They are available in bmk under bin. The other way, is to
+  call flin in your ruby program. This is more efficient, since it limits the IO on the local store. If you choose the second option, you
+  have the choice between the Bookmark object or the Singleton version. The latter was used for the command line option to limit the
+  proliferation of Bookmark objects and keep a consistent set of entries from the local store. Moreover, note that we provide a default
+  local
+
+In that case, first, you start the server as follows: ttserver -host <host-addr> -port <port-num> /path/to/data/file
+
+Note that we use the hash version so the extension of the file ought to be "tch". Tokyo cabinet determine the type of database by the
+format of the db file
+
+The host address and port number should then be passed to the sync_db method, while calling it.
 
 == REQUIREMENTS:
 
-* FIX (list of requirements)
+Tokyo tyrant as a database server. It is only needed if you synchronize with a central db. 
 
 == INSTALL:
 
-* FIX (sudo gem install, anything else)
+"sudo gem install flin"
+
+Note that if you are using rvm like me, you don't need to be super user. Just gem install flin. Or even better, can use bunbler to handle the installation for you in your code.
+
 
 == LICENSE:
 

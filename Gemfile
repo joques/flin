@@ -11,4 +11,4 @@ gem "autotest-growl"
 gem "rspec"
 gem "cucumber"
 gem "rufus-tokyo"
-gem "commander", :require => "commander/import"
+gem "commander", :require => 'commander/import'

@@ -103,7 +103,7 @@ module Flin
       if @entries.has_key?(valid_title)
         current_url_val = @entries[valid_title]
         if current_url_val.include?(old_url)  
-          current_url_val.gsub(old_url, new_url)
+          current_url_val.gsub!(old_url, new_url)
           @entries[valid_title] = current_url_val
           "Bookmark entry successfully updated!"
         else
@@ -125,30 +125,27 @@ module Flin
       raise(RuntimeError, "Sorry! the url is malformed")  unless validate_url?(url)
       
       if @entries.has_key?(valid_title)
-        current_url_val = @entries[valid_title]
-        if current_url_val.include?(url)
-          # should be careful about the comma added after each url
-          url_followed_by_comma = url
-          url_followed_by_comma << ', '
+        current_url_vals = @entries[valid_title]
+        if current_url_vals.include?(url)
+          current_url_vals.gsub!(url, '')
           
-          if current_url_val.include?(url_followed_by_comma)
-            current_url_val.gsub(url_followed_by_comma,'')
-          else
-            current_url_val.gsub(url,'')
-          end          
+          # clean-up any comma mixed-up with space that might remain
+          current_url_vals.gsub!(/\A,|\s+,|\s*,\s*\z|\s*\z/,'')
           
-          if current_url_val.empty?
+          # finally, reassign the updated value
+          if current_url_vals.empty?
             @entries.delete(valid_title)
           else
-            @entries[valid_title] = current_url_val
+            @entries[valid_title] = current_url_vals
           end
+          
           "Bookmark entry successfully deleted!"
         else
           "Sorry! The url has never been attached to the title"
         end
       else
-        "Sorry! There is no bookmark entry with this title"
-      end      
+         "Sorry! There is no bookmark entry with this title"
+      end
     end
     
     # this method returns all the urls associated with the title
@@ -162,8 +159,7 @@ module Flin
       else
         "Sorry! There is no bookmark entry with this title"
       end
-    end
-    
+    end    
     
     # this method saves the bookmark entries to a local file
     def save
@@ -186,8 +182,8 @@ module Flin
     def to_s
       # should beautify the entry display
 
-      pretty_bmk = @entries.inject do |final_str, (entry_key, entry_vals)|
-        final_str << entry_key << ':' << '\t' << entry_vals << '\n'
+      pretty_bmk = @entries.inject('') do |final_str, (entry_key, entry_vals)|
+        final_str << entry_key << ":" << "\t" << entry_vals << "\n"
         final_str
       end
       pretty_bmk
