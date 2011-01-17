@@ -7,6 +7,9 @@
 FLIN_ROOT = File.expand_path File.join(File.dirname(__FILE__), '..')
 $:.unshift FLIN_ROOT
 
+
+# Gem and files
+
 require 'rubygems'
 require 'commander/import'
 require 'lib/flin'
